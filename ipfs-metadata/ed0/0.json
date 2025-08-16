@@ -1,0 +1,14 @@
+{
+  "name": "Avena CeSoM — Demo Edition",
+  "artist": "Charliepapa",
+  "description": "Own an edition and unlock full streaming access.",
+  "image": "ipfs://QmbvqbUAfsmLqzP6i4SuJ6NAjLMAbRMxuG17axcTjSHPNP",
+  "animation_url": "ipfs://QmWNKRTKhBrjit185YwKhifbCTSPnoFdeHzyXidFDxcdzW",
+  "attributes": [
+    { "trait_type": "Edition Size", "value": 1000 },
+    { "trait_type": "Track ID", "value": 0 },
+    { "trait_type": "Price (Sun)", "value": 15000000 }
+  ],
+  "external_url": "",
+  "artist_wallet": "THzMQSCCwRR3mVtZQ1wtzDdwiJSMiu3vUV"
+}
