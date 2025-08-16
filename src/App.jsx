@@ -2,7 +2,10 @@ import React from 'react'
 import { BrowserRouter, Routes, Route, NavLink, useParams, Link } from 'react-router-dom'
 import ConnectButton from './components/ConnectButton'
 import Track from './components/Track'
+import ArtistMint from './components/ArtistMint'
 import { CONFIG } from './config'
+import { ipfsToHttp } from './utils/ipfs'
+import { getTrackIds } from './lib/manifest'
 
 function TrackPage() {
   const { id } = useParams()
@@ -22,6 +25,7 @@ function Nav() {
         <NavLink to="/" style={linkStyle} end>Home</NavLink>
         <NavLink to="/tracks" style={linkStyle}>Tracks</NavLink>
         <NavLink to="/profile" style={linkStyle}>Profile</NavLink>
+        <NavLink to="/artist" style={linkStyle}>Artist</NavLink>
       </nav>
       <ConnectButton />
     </header>
@@ -39,9 +43,10 @@ export default function App() {
             <Route path="/track/:id" element={<TrackPage />} />
             <Route path="/tracks" element={<Tracks />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/artist" element={<ArtistMint />} />
           </Routes>
         </main>
-        <footer style={{textAlign:'center', padding:20, opacity:0.6, fontSize:12}}>Shasta testnet • ERC‑1155‑style music editions on TRON</footer>
+        <footer style={{textAlign:'center', padding:20, opacity:0.6, fontSize:12}}>Shasta testnet • ERC-1155-style music editions on TRON</footer>
       </BrowserRouter>
     </div>
   )
@@ -49,25 +54,30 @@ export default function App() {
 
 function Tracks() {
   const [items, setItems] = React.useState([])
+
   React.useEffect(() => {
     (async () => {
       try {
         const { getActiveTronWeb } = await import('./lib/tron')
-        const { ipfsToHttp } = await import('./utils/ipfs')
         const tw = getActiveTronWeb()
         const { default: abi } = await import('./abi/Music1155.js')
         const c = await tw.contract(abi, CONFIG.CONTRACT_ADDRESS)
-        const rows = await Promise.all(CONFIG.TRACK_IDS.map(async (id) => {
+
+        const ids = await getTrackIds()
+        const rows = await Promise.all(ids.map(async (id) => {
           try {
-            const u = await c.uri(id).call();
+            const u = await c.uri(id).call()
             const meta = await fetch(ipfsToHttp(u)).then(r=>r.json()).catch(()=>null)
             return { id, meta }
-          } catch { return { id, meta: null } }
+          } catch {
+            return { id, meta: null }
+          }
         }))
         setItems(rows)
       } catch (e) { console.error(e) }
     })()
   }, [])
+
   return (
     <div style={{ maxWidth: 960, margin: '30px auto', padding: '0 20px'}}>
       <h1>Tracks</h1>
@@ -88,18 +98,20 @@ function Tracks() {
 function Profile() {
   const [addr, setAddr] = React.useState(null)
   const [items, setItems] = React.useState([])
+
   React.useEffect(() => {
     (async () => {
       try {
         const { getActiveTronWeb } = await import('./lib/tron')
-        const { ipfsToHttp } = await import('./utils/ipfs')
         const tw = getActiveTronWeb()
         const a = tw?.defaultAddress?.base58; setAddr(a)
         if (!a) return
         const { default: abi } = await import('./abi/Music1155.js')
         const c = await tw.contract(abi, CONFIG.CONTRACT_ADDRESS)
+        const ids = await getTrackIds()
+
         const rows = []
-        for (const id of CONFIG.TRACK_IDS) {
+        for (const id of ids) {
           try {
             const b = await c.balanceOf(a, id).call()
             const owned = Number(b)
@@ -114,6 +126,7 @@ function Profile() {
       } catch (e) { console.error(e) }
     })()
   }, [])
+
   return (
     <div style={{ maxWidth: 960, margin: '30px auto', padding: '0 20px'}}>
       <h1>Profile</h1>
